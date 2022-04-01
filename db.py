@@ -1,13 +1,13 @@
 import pandas as pd
+import os
 
 
 class TEST():
     def __init__(self, file):
         self.questions = []
+        self.results = []
         self.df = pd.read_excel(file)
-
         self.df = self.df.dropna(how='all').dropna(how='all', axis=1)
-
         self.make_questions()
 
     def make_questions(self):
@@ -26,8 +26,29 @@ class TEST():
                 text=row[2],
                 answers=ans
             )
-
             self.questions.append(question)
+
+    def write_user_results(
+        self,
+        results_file="результаты.xlsx",
+        first_name="имя",
+        last_name="фамилия",
+        time_total="неизвестно",
+        wrong_answers="неизвестно"
+    ):
+
+        user_df = pd.DataFrame(
+            index=None,
+            data=[first_name, last_name, time_total, wrong_answers]
+        )
+        print(user_df)
+        """
+        if not os.path.isfile(results_file):
+            user_df.to_excel(results_file, header="column_names")
+        else:
+            user_df.to_excel(results_file, mode="a", header=False)
+
+        """
 
 
 class Question:

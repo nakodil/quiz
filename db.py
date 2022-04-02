@@ -37,19 +37,25 @@ class TEST():
         wrong_answers="неизвестно"
     ):
 
-        user_df = pd.DataFrame(
-            index=None,
-            data=[first_name, last_name, time_total, wrong_answers]
-        )
-        print(user_df)
-        """
+        user_data = [
+            last_name,
+            first_name,
+            round(time_total.total_seconds(), 1),
+            wrong_answers
+        ]
+
+        columns_names = [
+            "фамилия",
+            "имя",
+            "время (с)",
+            "ошибки"
+        ]
+        user_df = pd.DataFrame([user_data], columns=columns_names)
+
         if not os.path.isfile(results_file):
-            user_df.to_excel(results_file, header="column_names")
+            user_df.to_excel(results_file)
         else:
-            user_df.to_excel(results_file, mode="a", header=False)
-
-        """
-
+            pass  # Апендить к существующей книге!!!
 
 class Question:
     def __init__(

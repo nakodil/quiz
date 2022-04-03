@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+from openpyxl import load_workbook
+import datetime
 
 
 class TEST():
@@ -33,7 +35,7 @@ class TEST():
         results_file="результаты.xlsx",
         first_name="имя",
         last_name="фамилия",
-        time_total="неизвестно",
+        time_total=datetime.timedelta(seconds=10),
         wrong_answers="неизвестно"
     ):
 
@@ -50,12 +52,34 @@ class TEST():
             "время (с)",
             "ошибки"
         ]
-        user_df = pd.DataFrame([user_data], columns=columns_names)
 
         if not os.path.isfile(results_file):
+            user_df = pd.DataFrame(
+                [user_data],
+                columns=columns_names,
+                index=[1]
+            )
             user_df.to_excel(results_file)
         else:
-            pass  # Апендить к существующей книге!!!
+            with pd.ExcelWriter(
+                results_file,
+                mode="a",
+                engine="openpyxl",
+                if_sheet_exists="overlay"
+            ) as writer:
+                user_df = pd.DataFrame(
+                    [user_data],
+                    columns=columns_names,
+                    index=[writer.sheets['Sheet1'].max_row]
+                )
+                user_df.to_excel(
+                    writer,
+                    index_label="№",
+                    sheet_name="Sheet1",
+                    startrow=writer.sheets['Sheet1'].max_row,
+                    header=False
+                )
+
 
 class Question:
     def __init__(
@@ -71,3 +95,11 @@ class Question:
         self.text = text
         self.image = image
         self.answers = answers
+
+if __name__ == "__main__":
+    test = TEST("assets/db.xlsx")
+    test.write_user_results(
+        first_name="Второй",
+        last_name="Питонов",
+        wrong_answers=10
+    )

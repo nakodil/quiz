@@ -1,0 +1,1 @@
+pyinstaller --onefile --paths C:\Users\Me\Desktop\python\virtual\pdd\Lib\site-packages --icon C:\Users\Me\Desktop\python\virtual\pdd\it.ico main.pyw

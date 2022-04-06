@@ -1,16 +1,17 @@
 import pandas as pd
 import os
-from openpyxl import load_workbook
 import datetime
 
 
 class TEST():
-    def __init__(self, file):
+    def __init__(self, file, option):
         self.questions = []
         self.results = []
         self.df = pd.read_excel(file)
         self.df = self.df.dropna(how='all').dropna(how='all', axis=1)
+        self.option = option
         self.make_questions()
+
 
     def make_questions(self):
         for index, row in self.df.iterrows():
@@ -24,7 +25,7 @@ class TEST():
             question = Question(
                 number=row["№"],
                 right_answer=row[1],
-                image=f'assets/{row["№"]}.png',
+                image=f'assets/{self.option}/{row["№"]}.png',
                 text=row[2],
                 answers=ans
             )
@@ -36,6 +37,7 @@ class TEST():
         first_name="имя",
         last_name="фамилия",
         time_total=datetime.timedelta(seconds=10),
+        right_answers="неизвестно",
         wrong_answers="неизвестно"
     ):
 
@@ -43,14 +45,18 @@ class TEST():
             last_name,
             first_name,
             round(time_total.total_seconds(), 1),
-            wrong_answers
+            right_answers,
+            wrong_answers,
+            wrong_answers * 3  # хардкод!
         ]
 
         columns_names = [
             "фамилия",
             "имя",
             "время (с)",
-            "ошибки"
+            "верные ответы",
+            "ошибки",
+            "штарфные баллы"
         ]
 
         if not os.path.isfile(results_file):
@@ -87,7 +93,7 @@ class Question:
         number=0,
         right_answer=0,
         text="",
-        image="assets/01.png",
+        image="assets/option_/1.png",
         answers=["варианты ответа не созданы"]
     ):
         self.number = number
@@ -95,11 +101,3 @@ class Question:
         self.text = text
         self.image = image
         self.answers = answers
-
-if __name__ == "__main__":
-    test = TEST("assets/db.xlsx")
-    test.write_user_results(
-        first_name="Второй",
-        last_name="Питонов",
-        wrong_answers=10
-    )

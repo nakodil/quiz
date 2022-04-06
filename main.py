@@ -15,7 +15,8 @@ class App(tk.Tk):
         # шрифты
         pyglet.font.add_file("assets/PTSans-Regular.ttf")
         self.font_button = ("PTSans-Regular", 16)
-        self.font_question = ("PTSans-Regular", 18)
+        self.font_question = ("PTSans-Regular", 16)
+        self.font_large = ("PTSans-Regular", 30)
         # выход
         self.bind("<Escape>", self.close)
 
@@ -37,29 +38,29 @@ class App(tk.Tk):
             font=self.font_button,
             text=f"вариант 1",
             command=lambda: self.set_option(1)
-        ).pack()
+        ).pack(pady=10)
         self.option_2 = tk.Button(
             self.options_frame,
             font=self.font_button,
             text=f"вариант 2",
             command=lambda: self.set_option(2)
-        ).pack()
+        ).pack(pady=10)
         self.option_3 = tk.Button(
             self.options_frame,
             font=self.font_button,
             text=f"вариант 3",
             command=lambda: self.set_option(3)
-        ).pack()
+        ).pack(pady=10)
         self.option_4 = tk.Button(
             self.options_frame,
             font=self.font_button,
             text=f"вариант 4",
             command=lambda: self.set_option(4)
-        ).pack()
+        ).pack(pady=10)
 
     def show_question(self, question):
         self.question_number.config(
-            text=f"Вопрос {self.current_question_idx + 1} из {len(self.questions)}"
+            text=f"вопрос {self.current_question_idx + 1} из {len(self.questions)}"
         )
         # пустой текст в базе - NaN типа float
         if isinstance(question.text, str):
@@ -72,17 +73,19 @@ class App(tk.Tk):
             width=self.img.width(),
             height=self.img.height()
         )
-        self.canvas.grid(column=0, row=1, columnspan=2)
+        self.canvas.grid(column=0, row=1, rowspan=5)
         self.canvas.create_image(0, 0, anchor='nw', image=self.img)
         answer_idx = 0
         for answer in question.answers:
             button = tk.Button(
                 self.answers_frame,
+                wraplength=300,
+                bg="#FFFF99",
                 font=self.font_button,
                 text=question.answers[answer_idx],
                 command=lambda idx=answer_idx + 1: self.check_answer(idx)
             )
-            button.grid(column=1, row=answer_idx, pady=5)
+            button.pack(side="top", fill="x", pady=10)
             answer_idx += 1
 
     def check_answer(self, answer_idx):
@@ -110,7 +113,8 @@ class App(tk.Tk):
                 "Время вышло!\nОтправляйтесь к следующей станции!"
             )
             return None
-        self.question_time.configure(text=f"осталось {self.time} секунд")
+        time_left = datetime.timedelta(seconds=self.time)
+        self.question_time.configure(text=f"времени осталось {time_left}")
         self.question_frame.after(1000, self.update_clock)
 
     def start_screen(self):
@@ -119,7 +123,8 @@ class App(tk.Tk):
         self.start_frame.place(relx=.5, rely=.5, anchor="c")
         self.start_button = tk.Button(
             self.start_frame,
-            font=self.font_button,
+            font=self.font_large,
+            bg="#58d68d",
             text="начать тест",
             command=self.start_test
         )
@@ -134,37 +139,39 @@ class App(tk.Tk):
         self.time = 600  # хардкод!
 
         # фрейм вопроса
-        self.question_frame = tk.Frame(self, pady=10)
-        self.question_frame.place(relx=.5, rely=0, anchor="n")
+        self.question_frame = tk.Frame(self, padx=10, pady=10)
+        self.question_frame.place(relx=.5, rely=.5, anchor="c")
 
+        # фрейм данных: номер вопроса и время
+        self.data_frame = tk.Frame(self.question_frame)
+        self.data_frame.grid(column=0, row=0, columnspan=2, sticky="W", pady=20)
         # номер вопроса из всех
         self.question_number = tk.Label(
-            self.question_frame,
-            font=self.font_button,
-            anchor="w"
+            self.data_frame,
+            font=self.font_button
         )
-        self.question_number.grid(column=0, row=0)
+        self.question_number.pack(anchor="w")
 
         # время
         self.question_time = tk.Label(
-            self.question_frame,
-            font=self.font_button,
-            anchor="e"
+            self.data_frame,
+            font=self.font_button
         )
-        self.question_time.grid(column=1, row=0)
+        self.question_time.pack(anchor="w")
 
         # текст вопроса
         self.question_text = tk.Label(
             self.question_frame,
             font=self.font_question,
-            anchor="center",
-            text="текст вопроса"
+            justify="left",
+            text="текст вопроса",
+            wraplength=300
         )
-        self.question_text.grid(column=0, row=2, pady=10, columnspan=2)
+        self.question_text.grid(column=1, row=1, padx=10)
 
         # фрейм вариантов ответа
-        self.answers_frame = tk.Frame(self.question_frame)
-        self.answers_frame.grid(column=0, row=3, columnspan=2)
+        self.answers_frame = tk.Frame(self.question_frame, width=1, height=1)
+        self.answers_frame.grid(column=1, row=2, padx=20)
 
         # старт
         self.show_question(self.questions[self.current_question_idx])
@@ -179,10 +186,11 @@ class App(tk.Tk):
         self.finish_frame.place(relx=.5, rely=.5, anchor="c")
         self.finish_text = tk.Label(
             self.finish_frame,
-            font=self.font_question,
+            font=self.font_large,
             text=message,
             width=self.width,
-            anchor="center"
+            anchor="center",
+            fg="#4b9e34"
         )
         self.finish_text.grid(column=0, row=0)
         self.db.write_user_results(

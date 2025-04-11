@@ -1,0 +1,9 @@
+build/
+dist/
+__pycache__/
+all_files_contents.txt
+build_cmd.txt
+files_contents_collector.py
+icon.ico
+ruff.toml
+знатоки_ПДД.spec

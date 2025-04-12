@@ -42,7 +42,6 @@ class Scene(ABC):
 
     def render(self) -> None:
         """Отрисовка."""
-        self.app.screen.fill(config.BG_COLOR)
         self.sprites.draw(self.screen)
         pygame.display.flip()
 
@@ -51,11 +50,48 @@ class Scene(ABC):
         self.sprites.update()
 
 
+class ErrorScene(Scene):
+    """Сцена ошибки."""
+
+    def __init__(self, app: App, text: str) -> None:
+        """Конструктор класса сцены ошибки."""
+        super().__init__(app)
+        title = "Ошибка!"
+        TextWidget(
+            self.sprites,
+            (self.width // 2, self.height // 10),
+            int(self.font_size * 1.5),
+            config.FONT_BOLD,
+            config.ERROR_COLOR,
+            text=title,
+        )
+
+        TextWidget(
+            self.sprites,
+            (self.width // 2, self.height // 2),
+            int(self.font_size),
+            config.FONT_REGULAR,
+            config.TEXT_COLOR,
+            text=text,
+        )
+
+        position_y = self.height // 2 + self.font_size * 2
+
+        TextWidget(
+            self.sprites,
+            (self.width // 2, position_y),
+            int(self.font_size),
+            config.FONT_REGULAR,
+            config.TEXT_COLOR,
+            text=config.EXIT_INSTRUCTION_TEXT,
+        )
+
+
 class InstructionsScene(Scene):
     """Инструкции для ведущего - показывается один раз при запуске программы."""
 
     def __init__(self, app: App) -> None:
-        """Конструктор класса."""
+        """Конструктор класса сцены инструкций для ведущего."""
         super().__init__(app)
 
         # Отступ от верхней границы экрана
@@ -63,13 +99,13 @@ class InstructionsScene(Scene):
 
         # Заголовок
         title = "Памятка ведущему"
-        self.text = TextWidget(
+        TextWidget(
             self.sprites,
             (self.width // 2, position_y),
-            title,
             int(self.font_size * 1.5),
             config.FONT_BOLD,
             config.TITLE_COLOR,
+            text=title,
         )
         position_y += self.font_size * 3
 
@@ -79,10 +115,10 @@ class InstructionsScene(Scene):
             self.text = TextWidget(
                 self.sprites,
                 (self.width // 2, position_y),
-                text_line,
                 self.font_size,
                 config.FONT_BOLD,
-                config.TITLE_COLOR,
+                config.TEXT_COLOR,
+                text=text_line,
             )
             position_y += self.font_size * 2
 
@@ -92,10 +128,10 @@ class InstructionsScene(Scene):
         self.text = TextWidget(
             self.sprites,
             (self.width // 2, position_y),
-            title,
             int(self.font_size * 1.5),
             config.FONT_BOLD,
             config.TITLE_COLOR,
+            text=title,
         )
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
@@ -112,52 +148,69 @@ class SplashScene(Scene):
     def __init__(self, app: App) -> None:
         """Конструктор класса."""
         super().__init__(app)
-        self.text = TextWidget(
+
+        # Заголовок
+        TextWidget(
             self.sprites,
             (self.width // 2, self.height // 2),
-            config.WELCOME_TEXT,
             self.font_size * 2,
             config.FONT_BOLD,
             config.TITLE_COLOR,
+            text=config.WELCOME_TEXT,
         )
-        self.text = TextWidget(
+
+        # Текст
+        TextWidget(
             self.sprites,
-            (self.width // 2, int(self.height * 0.9)),
-            config.STUDENT_INSTRUCTION_TEXT_START,
+            (self.width // 2, self.height // 2 + self.font_size * 3),
             self.font_size,
             config.FONT_REGULAR,
             config.TEXT_WIDGET_FONT_COLOR,
+            text=config.STUDENT_INSTRUCTION_TEXT_START,
+        )
+
+        # Кнопка старта тестовой сессии
+        Button(
+            self.sprites,
+            (self.width // 2, int(self.height * 0.9)),
+            self.font_size,
+            None,
+            self.width // 3,
+            text="Начать тест",
         )
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
         """Сбор событий сцены."""
         super().handle_events(events)
         for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                self.app.scene = TestScene(self.app)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for sprite in self.sprites:
+                    if isinstance(sprite, Button):
+                        self.app.scene = TestScene(self.app)
 
 
 class TestEndScene(Scene):
     """Сцена после окончания теста."""
 
-    def __init__(self, app: App) -> None:
-        """Конструктор класса."""
+    def __init__(self, app: App, test_status: str) -> None:
+        """Конструктор класса заставки окончания теста."""
         super().__init__(app)
-        self.text = TextWidget(
+        title = f"{test_status.capitalize()}. {config.QUIZ_COMPLETED_TEXT}"
+        TextWidget(
             self.sprites,
             (self.width // 2, self.height // 2),
-            config.QUIZ_COMPLETED_TEXT,
             self.font_size * 2,
             config.FONT_BOLD,
             config.TITLE_COLOR,
+            text=title,
         )
-        self.text = TextWidget(
+        TextWidget(
             self.sprites,
-            (self.width // 2, self.height // 2 + 300),
-            config.STUDENT_INSTRUCTION_TEXT_FINISH,
+            (self.width // 2, self.height // 2 + self.font_size * 3),
             self.font_size,
             config.FONT_REGULAR,
             config.TEXT_WIDGET_FONT_COLOR,
+            text=config.STUDENT_INSTRUCTION_TEXT_FINISH,
         )
 
     def handle_events(self, events: list[pygame.event.Event]) -> None:
@@ -173,18 +226,19 @@ class TestScene(Scene):
     """Сцена теста."""
 
     def __init__(self, app: App) -> None:
-        """Конструктор класса."""
+        """Конструктор класса сцены теста."""
         super().__init__(app)
 
         # Разметка виджетов
         center_x = self.width // 2
-        widget_y = int(self.height * 0.05)
+        widget_y = int(self.height * 0.01)
 
         # Таймер
         self.timer = Timer(
             self.sprites,
-            (self.width - self.font_size * 4, widget_y),
+            (int(self.width * 0.98), widget_y),
             self.font_size,
+            align="topright",
         )
         pygame.time.set_timer(TIMER_EVENT, 100)
 
@@ -195,12 +249,13 @@ class TestScene(Scene):
         # Номер вопроса / количество оставшихся
         self.question_order = TextWidget(
             self.sprites,
-            (center_x, widget_y),
-            "Номер вопроса",  # TODO: предусмотреть вызов без этого аргумента
+            (int(self.width * 0.02), widget_y),
             self.font_size,
-            config.FONT_REGULAR,
+            config.FONT_MONO,
             config.TEXT_WIDGET_FONT_COLOR,
+            align="topleft",
         )
+
         widget_y += self.question_order.rect.height
 
         # FIXME костыли - вычисляем высоту с учетом высоты всех кнопок
@@ -223,7 +278,6 @@ class TestScene(Scene):
         self.question_text = TextWidget(
             self.sprites,
             (center_x, widget_y),
-            "Текст вопроса",
             self.font_size,
             config.FONT_BOLD,
             config.TEXT_WIDGET_FONT_COLOR,
@@ -235,7 +289,7 @@ class TestScene(Scene):
 
     def update_widgets(self, buttons_start_y: int) -> None:
         """Обновляет текст и изображения во всех виджетах."""
-        text = f"вопрос {self.test.question_idx + 1} из {len(self.test.questions)}"
+        text = f"{self.test.question_idx + 1} из {len(self.test.questions)}"
         self.question_order.text = text
         self.image.image_name = self.test.current_question["image"]
         self.image.load_and_scale_image()
@@ -258,14 +312,9 @@ class TestScene(Scene):
         super().update()
         # Если время истекло, завершить тестовую сессию
         if self.timer.time_current <= self.timer.time_stop:
-            self.test.finish("время вышло")
-            self.app.scene = TestEndScene(self.app)
-
-    def render(self) -> None:
-        """Отрисовка игровых объектов на дисплее."""
-        self.app.screen.fill(config.BG_COLOR)
-        self.sprites.draw(self.screen)
-        pygame.display.flip()
+            test_staus = "время вышло"
+            self.test.finish(test_staus)
+            self.app.scene = TestEndScene(self.app, test_staus)
 
     def make_options_buttons(self, start_y: int) -> None:
         """Создает кликабельные кнопки."""
@@ -281,16 +330,17 @@ class TestScene(Scene):
 
                 # Кончились вопросы - тест пройден
                 if self.test.is_finished:
-                    self.app.scene = TestEndScene(self.app)
+                    test_status = "Тест окончен"
+                    self.app.scene = TestEndScene(self.app, test_status)
 
                 self.update_widgets(start_y)
 
             Button(
                 self.sprites,
                 (self.width // 2, int(start_y + idx * self.font_size * 2.3)),
-                option,
                 self.font_size,
                 callback,
                 self.width // 3,
+                text=option,
             )
 

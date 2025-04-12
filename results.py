@@ -13,6 +13,18 @@ if TYPE_CHECKING:
     from test_session import Test
 
 
+def is_results_writable() -> bool:
+        """Проверяет доступность файла результатов для записи."""
+        file_path = Path(config.RESULTS_FILE)
+        if not file_path.exists():
+            return True
+        try:
+            with file_path.open("a"):
+                return True
+        except OSError:
+            return False
+
+
 def save_results(test: Test) -> None:
     """Сохраняет результат сессии в таблицу."""
     try:

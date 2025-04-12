@@ -17,18 +17,21 @@ class TextWidget(pygame.sprite.Sprite):
             self,
             sprite_group: pygame.sprite.Group,
             coords: tuple[int, int],
-            text: str | int,
             font_size: int,
             font_path: Path,
             font_color: tuple[int, int, int],
+            text: str | int = "",
+            align: str = "center",
     ) -> None:
         """Конструктор класса."""
         self.sprite_group = sprite_group
         self.coords = coords
-        self.text = text
         self.font_size = font_size
-        self.font_color = font_color
         self.font_path = font_path
+        self.font_color = font_color
+        self.text = text
+        self.align = align
+
         self.font = pygame.font.Font(
             self.font_path,
             self.font_size,
@@ -46,8 +49,13 @@ class TextWidget(pygame.sprite.Sprite):
             True,
             self.font_color,
         )
-        self.rect = self.image.get_rect(center=self.coords)
 
+        rect_kwargs = (
+            {"topleft": self.coords} if self.align == "topleft" else
+            {"topright": self.coords} if self.align == "topright" else
+            {"center": self.coords}
+        )
+        self.rect = self.image.get_rect(**rect_kwargs)
 
 class Timer(TextWidget):
     """Таймер с обратным отсчетом."""
@@ -57,9 +65,9 @@ class Timer(TextWidget):
             sprite_group: pygame.sprite.Group,
             coords: tuple[int, int],
             font_size: int,
+            align: str = "center",
     ) -> None:
         """Конструктор класса."""
-        text = "ХЗ"
         self.color_critical = config.TIMER_CRITICAL_COLOR
         self.time_initial = None
         self.time_current = None
@@ -68,7 +76,9 @@ class Timer(TextWidget):
         self.is_ticking = False
         font_path = config.FONT_MONO
         font_color = config.TIMER_COLOR
-        super().__init__(sprite_group, coords, text, font_size, font_path, font_color)
+        super().__init__(
+            sprite_group, coords, font_size, font_path, font_color, align=align,
+        )
 
     def start(self) -> None:
         """Запуск обратного отсчета."""
@@ -97,13 +107,8 @@ class Timer(TextWidget):
         if self.time_current < self.time_critical:
             self.color = self.color_critical
         minutes, seconds = divmod(int(self.time_current), 60)
-        time_str = f"{minutes:02}:{seconds:02}"
-        self.image = self.font.render(
-            time_str,
-            True,
-            self.font_color,
-        )
-        self.rect = self.image.get_rect(center=self.coords)
+        self.text = f"{minutes:02}:{seconds:02}"
+        super().update()
 
 
 class Button(TextWidget):
@@ -113,15 +118,16 @@ class Button(TextWidget):
         self,
         sprite_group: pygame.sprite.Group,
         coords: tuple[int, int],
-        text: str | int,
         font_size: int,
         callback: Callable,
         min_width: int,
+        text: int | str = "",
     ) -> None:
         """Конструктор класса."""
         self.font_size = font_size
         self.callback = callback
         self.min_width = min_width
+        self.text = text
         self.bg_color = config.BUTTON_BG_COLOR
         self.padding = self.font_size // 2
         self.font_path = config.FONT_REGULAR
@@ -129,10 +135,10 @@ class Button(TextWidget):
         super().__init__(
             sprite_group,
             coords,
-            text,
             self.font_size,
             self.font_path,
             self.font_color,
+            text=self.text,
         )
 
     def handle_click(self, mouse_pos: tuple[int, int]) -> None:
